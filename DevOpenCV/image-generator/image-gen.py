@@ -11,6 +11,7 @@ print(path.parent)
 image_dir = os.path.join(path.parent, "img\\look-alike")
 print(image_dir)
 
+#Determining Image sizing based on number of pictures
 path, dirs, files = next(os.walk(image_dir))
 file_len = len(files)
 print(file_len)
@@ -23,12 +24,13 @@ gray = (26,26,26)
 tier_colors=[(255,127,127), (255,191,127), (255,255,127), (127,255,127),(127,191,255),(127,127,255), (255,127,255) ]
 
 
-# Image distance information
+# Initial Image distance information
 image_height, image_width = (1080, 1920)
 v_padding = 10
-h_radding = 10
-boxIsize = 152
+h_padding = 10
+ending_y_size = 152
 fontsize = 30
+box_size = ending_y_size - h_padding
 
 font = ImageFont.truetype("./font/Arial.ttf", fontsize)
 
@@ -39,39 +41,49 @@ danny_rate = {
 	'B': [5, 9, 17, 20, 31, 32],
 	'C': [1, 2, 6, 14, 21, 22, 28, 30],
 	'D': [7, 12, 15, 19, 24],
-	'E': [4,13, 16]
+	'E': [4,13, 16],
+	'F': [11]
 }
+
+longest_tier = len(danny_rate[max(danny_rate, key=lambda x:len(danny_rate[x]))])
+print(longest_tier);
+
+estimated_width = (h_padding + ending_y_size) * longest_tier + h_padding;
+
+if  estimated_width > image_width : 
+	image_width = estimated_width
 
 tier_list = Image.new('RGBA', (image_width, image_height), 'black') 
 idraw = ImageDraw.Draw(tier_list)
 
 # Draw the base list
 for x in range(num_tiers):
-	idraw.rectangle((v_padding, v_padding +boxIsize*(x)  , boxIsize, boxIsize*(x+1)), fill=tier_colors[x])
-	idraw.rectangle((v_padding + boxIsize, v_padding +boxIsize*(x), image_width, boxIsize*(x+1)), fill=gray)
+	idraw.rectangle((h_padding, v_padding + ending_y_size*(x)  , ending_y_size, ending_y_size*(x+1)), fill=tier_colors[x])
+	idraw.rectangle((h_padding + ending_y_size, v_padding +ending_y_size*(x), image_width, ending_y_size*(x+1)), fill=gray)
 	w, h = idraw.textsize(tier_cat[x])
-	idraw.text(((boxIsize - w)/2 ,boxIsize*(x) + (boxIsize - h)/2), tier_cat[x], font=font, fill='black')
+	idraw.text(((ending_y_size - w)/2 ,ending_y_size*(x) + (ending_y_size - h)/2), tier_cat[x], font=font, fill='black')
 
 # Add in images based on dictionary WIP
-# for root, dirs, files in os.walk(image_dir):
-# 	for file in files:
-# 		if file.endswith("png") or file.endswith("jpg"):
-# 			path = os.path.join(root, file)
-# 			label = os.path.basename(os.path.dirname(path)).replace(" ","-").lower()
-# 			print(label, path)
-# 			if label in label_ids:
-# 				pass
-# 			else:
-# 				label_ids[label] = current_id
-# 				current_id += 1
-# 			id_ = label_ids[label]
-# 			# y_labels.append(label)
-# 			# x_train.append(path)
-# 			pil_image = Image.open(path).convert("L")
-# 			size = (550, 550)
-# 			final_image = pil_image.resize(size, Image.ANTIALIAS)
+thumb_size = box_size, box_size
+tier_height = 0
+for tier in danny_rate:
+	total_width_used = ending_y_size;
+	images = danny_rate[tier]
+	for image in images:
+		im_name = str(image) + ".PNG"
+		print(im_name)
+		new_path = os.path.join(image_dir, im_name)
+		im = Image.open(new_path)
+		im.thumbnail(thumb_size, Image.ANTIALIAS)
+		t_w, t_h = im.size
+		total_width_used += h_padding;
+		tier_list.paste(im, (total_width_used, tier_height + v_padding , total_width_used + t_w, tier_height + t_h + v_padding))
+		
+		#idraw.rectangle((total_width_used, tier_height + v_padding , total_width_used + t_w, tier_height + t_h + v_padding), fill="blue")
+		total_width_used += t_w
+	tier_height += ending_y_size;
 
-tier_list.save('tierlist.png')
+tier_list.save('dannys_tierlist.png')
 
 
 
